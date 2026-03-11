@@ -32,8 +32,10 @@ const bucketExists = async () => {
   if (minioClient) {
     try {
       const list = await minioClient.listBuckets();
+      logger.info(`S3 buckets found: ${list.map((b) => b.name).join(', ')}`);
       return list.find((bucket) => bucket.name === bucketName);
-    } catch {
+    } catch (error) {
+      logger.error(`S3 listBuckets error: ${error?.message}`);
       return false;
     }
   }
@@ -61,7 +63,7 @@ const createBucket = async () => {
     try {
       const exists = await bucketExists();
       if (!exists) {
-        await minioClient.makeBucket(bucketName);
+        await minioClient.makeBucket(bucketName, BUCKET.REGION);
       }
       if (!BUCKET.SKIP_POLICY) {
         await setBucketPolicy();
