@@ -697,16 +697,21 @@ export class BusinessStartupService extends ChannelStartupService {
           });
         }
 
+        this.logger.log('Contact section reached. key.remoteJid: ' + key.remoteJid);
+
         const contact = await this.prismaRepository.contact.findFirst({
           where: { instanceId: this.instanceId, remoteJid: key.remoteJid },
         });
 
+        this.logger.log('Contact lookup result: ' + JSON.stringify(contact));
+
         const contactRaw: any = {
           remoteJid: createJid(received.contacts[0].wa_id),
           pushName,
-          // profilePicUrl: '',
           instanceId: this.instanceId,
         };
+
+        this.logger.log('contactRaw: ' + JSON.stringify(contactRaw));
 
         if (contactRaw.remoteJid === 'status@broadcast') {
           return;
@@ -716,7 +721,6 @@ export class BusinessStartupService extends ChannelStartupService {
           const contactRaw: any = {
             remoteJid: createJid(received.contacts[0].wa_id),
             pushName,
-            // profilePicUrl: '',
             instanceId: this.instanceId,
           };
 
@@ -734,6 +738,7 @@ export class BusinessStartupService extends ChannelStartupService {
             where: { remoteJid: contact.remoteJid },
             data: contactRaw,
           });
+          this.logger.log('Contact updated successfully');
           return;
         }
 
@@ -742,6 +747,7 @@ export class BusinessStartupService extends ChannelStartupService {
         await this.prismaRepository.contact.create({
           data: contactRaw,
         });
+        this.logger.log('Contact created successfully');
       }
       if (received.statuses) {
         for await (const item of received.statuses) {
@@ -922,13 +928,13 @@ export class BusinessStartupService extends ChannelStartupService {
           message.type === 'reaction'
         ) {
           // Procesar el mensaje normalmente
-          this.messageHandle(content, database, settings);
+          await this.messageHandle(content, database, settings);
         } else {
           this.logger.warn(`Tipo de mensaje no reconocido: ${message.type}`);
         }
       } else if (content.statuses) {
         // Procesar actualizaciones de estado
-        this.messageHandle(content, database, settings);
+        await this.messageHandle(content, database, settings);
       } else {
         this.logger.warn('No se encontraron mensajes ni estados en el contenido recibido');
       }
