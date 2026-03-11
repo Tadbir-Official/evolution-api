@@ -551,6 +551,11 @@ export class BusinessStartupService extends ChannelStartupService {
                     }
                   }
                 }
+
+                await this.prismaRepository.message.update({
+                  where: { id: createdMessage.id },
+                  data: { message: messageRaw.message },
+                });
               }
             } catch (error) {
               this.logger.error(['Error on upload file to minio', error?.message, error?.stack]);
